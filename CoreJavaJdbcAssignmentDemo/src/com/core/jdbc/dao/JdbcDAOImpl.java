@@ -4,14 +4,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.core.jdbc.JdbcConnectionFactory;
 import com.projo.Book;
 import com.projo.Subject;
+import com.utils.Utils;
 
 public class JdbcDAOImpl implements IJdbcDAO {
+
 
 	private static final String INSERT_INTO_BOOK_TITLE_PRICE_VOLUME_PUBLISH_DATE_FK_SUBJECT_ID_VALUES = "INSERT INTO Book (title, price,volume,publishDate,Fk_Subject_Id) values (?, ?, ?, ?, ?)";
 	private static final String SUBJECT_DETAILS_ARE_SAVED_SUCCESSFULLY_WITH_ID = "Subject details are saved successfully With ID : ";
@@ -96,20 +96,7 @@ public class JdbcDAOImpl implements IJdbcDAO {
 		} catch (SQLException e) {
 			System.out.println("SQLException while inserting Subject details....." + e.getMessage());
 		} finally {
-			if (pstmt != null) {
-				try {
-					pstmt.close();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
-			if (rs != null) {
-				try {
-					rs.close();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
+			closeAllResources(null, pstmt, rs);
 		}
 		return subjectId;
 	}
@@ -118,45 +105,55 @@ public class JdbcDAOImpl implements IJdbcDAO {
 	public String deleteSubject(Subject subject) {
 
 		Connection connection = JdbcConnectionFactory.getConnection();
+		String operationStatus = null;
 
 		// To Delete a subject - we should first delete child component BOOK
 		// Retrieve BOOK ID for the given title
-		List<Integer> subjectIDList = retrieveSubjectIdByTitle(connection, subject.getTitle());
+		int bookDeleteCount = deleteBookBySubjectId(connection, subject.getSubjectId());
+		if (bookDeleteCount >= 0) {
+			PreparedStatement pstmt = null;
+			// Delete Subject
+			int subDeleteCount = 0;
+			try {
+				pstmt = connection.prepareStatement(" DELETE FROM Subject where subjectid = ? ");
+				pstmt.setInt(1, subject.getSubjectId());
 
-		// Delete based on the subjectID list
-		for (Integer subjectId : subjectIDList) {
-			deleteBook(connection, subjectId);
-		}
-
-		return null;
-	}
-
-	private void deleteBook(Connection connection, Integer subjectId) {
-
-		try {
-			PreparedStatement pstmt = connection.prepareStatement(" DELETE FROM BOOK where Fk_Subject_Id = ? ");
-			int deleteCount = pstmt.executeUpdate();
-		} catch (Exception ex) {
-
-		}
-
-	}
-
-	private List<Integer> retrieveSubjectIdByTitle(Connection connection, String title) {
-
-		List<Integer> subjectIdList = new ArrayList<>();
-		try {
-			PreparedStatement pstmt = connection.prepareStatement("SELECT subjectid from Subject where title = ? ");
-			ResultSet rs = pstmt.executeQuery();
-			while (rs.next()) {
-				subjectIdList.add(rs.getInt("subjectid"));
+				subDeleteCount = pstmt.executeUpdate();
+			} catch (SQLException ex) {
+				System.out.println("SQLException while deleting recordd.....");
+				operationStatus = Utils.FAIL;
+			} finally {
+				closeAllResources(connection, pstmt, null);
 			}
+			
+			getOperationStatus(subDeleteCount, operationStatus);
 
-		} catch (Exception ex) {
-			ex.printStackTrace();
 		}
 
-		return subjectIdList;
+		return operationStatus;
+	}
+
+	/**
+	 * Delete book by subjectID
+	 * 
+	 * @param connection
+	 * @param subjectId
+	 * @return
+	 */
+	private int deleteBookBySubjectId(Connection connection, Integer subjectId) {
+		int bookDeleteCount = 0;
+		PreparedStatement pstmt = null;
+		try {
+			pstmt = connection.prepareStatement(" DELETE FROM BOOK where Fk_Subject_Id = ? ");
+			pstmt.setInt(1, subjectId);
+
+			bookDeleteCount = pstmt.executeUpdate();
+		} catch (Exception ex) {
+
+		} finally {
+			closeAllResources(null, pstmt, null);
+		}
+		return bookDeleteCount;
 
 	}
 
@@ -166,6 +163,7 @@ public class JdbcDAOImpl implements IJdbcDAO {
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		int noOfRows = 0;
+		String operationStatus = "";
 
 		try {
 			pstmt = connection.prepareStatement("DELETE FROM Book where bookid = ?");
@@ -176,11 +174,25 @@ public class JdbcDAOImpl implements IJdbcDAO {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
+			operationStatus = Utils.FAIL;
 		} finally {
 			closeAllResources(connection, pstmt, rs);
 		}
+		
+		getOperationStatus(noOfRows, operationStatus);
 
 		return null;
+	}
+
+	private void getOperationStatus(int noOfRows, String operationStatus) {
+		if (operationStatus != null && operationStatus.isEmpty()) {
+			if (noOfRows > 0) {
+				operationStatus = Utils.SUCCESS;
+			} else {
+				operationStatus = Utils.NOT_FOUND;
+			}
+
+		}
 	}
 
 	/**
@@ -242,10 +254,32 @@ public class JdbcDAOImpl implements IJdbcDAO {
 		return bookResult;
 	}
 
+	/**
+	 * This is to search subject alone...
+	 */
 	@Override
-	public Subject searchSubject() {
-		// TODO Auto-generated method stub
-		return null;
+	public Subject searchSubject(Subject subjectForSearch) {
+		Connection connection = JdbcConnectionFactory.getConnection();
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		Subject subject = null;
+		try {
+			pstmt = connection.prepareStatement("SELECT * FROM Subject WHERE subjectid = ? ");
+			pstmt.setInt(1, subjectForSearch.getSubjectId());
+
+			rs = pstmt.executeQuery();
+			while (rs.next()) {
+				subject = new Subject();
+				subject.setTitle(rs.getString("title"));
+				subject.setDurationInHours(rs.getInt("durationInHours"));
+				subject.setSubjectId(rs.getInt("subjectid"));
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return subject;
 	}
 
 }

@@ -16,115 +16,201 @@ import com.core.jdbc.dao.IJdbcDAO;
 import com.core.jdbc.dao.JdbcDAOImpl;
 import com.projo.Book;
 import com.projo.Subject;
+import com.utils.Utils;
 
 public class CoreJdbcDemo {
 
+	private static final String EXCEPTION_WHILE_READING_A_DATA_FROM_INPUT_OUTPUT_SYSTEM = "Exception while reading a data from input/output system.....";
+	private static final String EXCEPTION_WHILE_CLOSING_BUFFERED_READER = "Exception while closing BufferedReader..";
+	private static final String FAILED_TO_DELETE_BOTH_SUBJECT_AND_ASSOCIATED_BOOKS_FOR_THE_SUBJECT_ID = "Failed to delete both Subject and associated Books for the Subject ID.....";
+	private static final String THE_PROVIDED_SUBJECT_ID_IS_NOT_AVAILABLE_IN_DATABASE = "The provided Subject ID is not available in database.....";
+	private static final String SUCCESSFULLY_DELETED_BOTH_SUBJECT_AND_ASSOCIATED_BOOKS_FOR_THE_SUBJECT_ID = "Successfully deleted both Subject and associated Books for the Subject ID.....";
+
 	public static void main(String[] args) throws ClassNotFoundException, SQLException {
 
-		readInputFromUser();
+		processMenuDrivenOperation();
 	}
 
 	/**
 	 * Menu option to read a input from USER.....
 	 */
-	private static void readInputFromUser() {
-
-		System.out.println("-----Select any option in the below list------");
-
-		System.out.println("a. Add a Book");
-		System.out.println("b. Delete a Subject");
-		System.out.println("c. Delete a book");
-		System.out.println("d. Search for a book");
-		System.out.println("e. Search for a subject");
-		System.out.println("f. Exit");
-
-		System.out.println("---------------------------------------------");
+	private static void processMenuDrivenOperation() {
 
 		BufferedReader br = new BufferedReader(new InputStreamReader((System.in)));
 
-		try {
-			String userInput = br.readLine();
-			if (isStrEmpty(userInput)) {
-				System.out.println("The input option shouldn't be empty - please enter valid option...");
-				readInputFromUser();
-			}
-			switch (userInput.toLowerCase()) {
+		boolean stopExecutionInd = true;
+		while (stopExecutionInd) {
+			System.out.println("-----Select any option(a or b or c or d or e or f) in the below list------");
 
-			case "a":
-				Subject subject = addBook();
-				IJdbcDAO jdbcDAO = new JdbcDAOImpl();
-				jdbcDAO.addBook(subject);
+			System.out.println("a. Add a Book");
+			System.out.println("b. Delete a Subject");
+			System.out.println("c. Delete a book");
+			System.out.println("d. Search for a book");
+			System.out.println("e. Search for a subject");
+			System.out.println("f. Exit");
 
-				break;
-			case "b":
-				System.out.println("Enter the subject title to be deleted...");
-				String subjectForDelete = br.readLine();
-				if (isStrEmpty(subjectForDelete)) {
-					System.out.println("subjectForDelete shouldn't be empty...");
-				} else {
-					Subject subject1 = new Subject();
-					IJdbcDAO jdbcDAO1 = new JdbcDAOImpl();
-					jdbcDAO1.deleteSubject(subject1);
+			System.out.println("---------------------------------------------");
+
+			try {
+				String userInput = br.readLine();
+				if (isStrEmpty(userInput)) {
+					System.out.println("The input option shouldn't be empty - please enter valid option...");
+					processMenuDrivenOperation();
+				}
+				switch (userInput.toLowerCase()) {
+
+				case "a":
+					Subject subject = addBook(br);
+					IJdbcDAO jdbcDAO = new JdbcDAOImpl();
+					jdbcDAO.addBook(subject);
+
+					break;
+				case "b":
+					deleteSubject(br);
+
+					break;
+				case "c":
+					deleteBook(br);
+					break;
+				case "d":
+					searchBook(br);
+
+					break;
+				case "e":
+					searchSubject(br);
+					break;
+				case "f":
+					System.out.println("As per userinput - Exiting......... ");
+					stopExecutionInd = false;
+					break;
+				default:
+					System.out.println(
+							"No option selected in the list..Select any of the options like a or b or c or d or e or f ");
+					processMenuDrivenOperation();
+					break;
+
+				}
+				System.out.println("");
+
+				if (stopExecutionInd) {
+					System.out.println("Do you want to continue with main menu again....Y/N ");
+					String inputOption = br.readLine();
+					// Terminate the process If user provided 'N'
+					if ("N".equalsIgnoreCase(inputOption)) {
+						stopExecutionInd = false;
+						System.out.println("Terminating the program.....");
+					}
 				}
 
-				break;
-			case "c":
-				System.out.println("Userinput - Delete a book ");
-				System.out.println("Input a bookid to be deleted......\n");
-				String bookIdStr = br.readLine();
-				Book book = new Book();
-				int bookid = Integer.parseInt(bookIdStr);
-				IJdbcDAO jdbcDAO1 = new JdbcDAOImpl();
-				book.setBookid(bookid);
-				jdbcDAO1.deleteBook(book);
-				break;
-			case "d":
-				System.out.println("Userinput - Search for a book ");
-				System.out.println("Input a bookid to be searched......\n");
-				String bookIdForSearch = br.readLine();
-				Book bookForSearch = new Book();
-				int bookid1 = Integer.parseInt(bookIdForSearch);
-				IJdbcDAO jdbcDAO2= new JdbcDAOImpl();
-				bookForSearch.setBookid(bookid1);
-				Book bookresult = jdbcDAO2.searchBook(bookForSearch);
-				System.out.println("Result Book is : " + bookresult);
-				break;
-			case "e":
-				System.out.println("Userinput - Search for a subject ");
-				break;
-			case "f":
-				System.out.println("Userinput - Exit ");
-				System.out.println("Exiting....");
-				return;
-			default:
-				System.out.println(
-						"No option selected in the list..Select any of the options like a or b or c or d or e or f ");
-				readInputFromUser();
-				break;
+			} catch (IOException e) {
+				System.out.println("Exception while reading an input from user..." + e.getMessage());
+			}
+		}
+		
 
+	}
+
+	private static void searchSubject(BufferedReader br) throws IOException {
+		System.out.println("Input a subjectId to be searched......\n");
+		String subjectIdForSearch = br.readLine();
+		Subject subjectForSearch = new Subject();
+		int subjectId = Integer.parseInt(subjectIdForSearch);
+		IJdbcDAO jdbcDAO2 = new JdbcDAOImpl();
+		subjectForSearch.setSubjectId(subjectId);
+		Subject subjectResult = jdbcDAO2.searchSubject(subjectForSearch);
+		if (subjectResult == null) {
+			System.out.println("Requested book is not available....");
+		} else {
+			System.out.println("The Requested Book is : " + subjectResult);
+		}
+	}
+
+	private static void deleteBook(BufferedReader br) throws IOException {
+		System.out.println("Userinput - Delete a book ");
+		System.out.println("Input a bookid to be deleted......\n");
+		String bookIdStr = br.readLine();
+		Book book = new Book();
+		while (isStrEmpty(bookIdStr)) {
+			System.out.println("Please enter bookId as number/integer ");
+			bookIdStr = br.readLine();
+
+		}
+		int bookid = Integer.parseInt(bookIdStr);
+		IJdbcDAO jdbcDAO1 = new JdbcDAOImpl();
+		book.setBookid(bookid);
+		jdbcDAO1.deleteBook(book);
+	}
+
+	private static void deleteSubject(BufferedReader br) throws IOException {
+
+		System.out.println(
+				"Caution - The associated books with Subject will also be deleted as books are stored in DB with Foriegn key relation....  ");
+		System.out.println("Do you want to continue Y/N...");
+		String alert = br.readLine();
+
+		if ("Y".equalsIgnoreCase(alert)) {
+			System.out.println("Input a subjectId to be deleted......\n");
+			String subjectIdForSearch = br.readLine();
+			Subject subjectForSearch = new Subject();
+			while(isStrEmpty(subjectIdForSearch)) {
+				System.out.println("Please enter valid bookid in number/integer...");
+				subjectIdForSearch = br.readLine();
+			}
+			int subjectId = Integer.parseInt(subjectIdForSearch);
+			IJdbcDAO jdbcDAO2 = new JdbcDAOImpl();
+			subjectForSearch.setSubjectId(subjectId);
+			String opeationStatus = jdbcDAO2.deleteSubject(subjectForSearch);
+			if (Utils.SUCCESS.equalsIgnoreCase(opeationStatus)) {
+				System.out
+						.println(SUCCESSFULLY_DELETED_BOTH_SUBJECT_AND_ASSOCIATED_BOOKS_FOR_THE_SUBJECT_ID + subjectId);
+			} else if (Utils.NOT_FOUND.equalsIgnoreCase(opeationStatus)) {
+				System.out.println(THE_PROVIDED_SUBJECT_ID_IS_NOT_AVAILABLE_IN_DATABASE + subjectId);
+
+			} else if (Utils.FAIL.equalsIgnoreCase(opeationStatus)) {
+				System.out.println(FAILED_TO_DELETE_BOTH_SUBJECT_AND_ASSOCIATED_BOOKS_FOR_THE_SUBJECT_ID + subjectId);
 			}
 
-		} catch (IOException e) {
-			System.out.println("Exception while reading an input from user..." + e.getMessage());
 		}
+	}
+
+	public static Book searchBook(BufferedReader br) throws IOException {
+
+		System.out.println("Input a bookid to be searched......\n");
+		String bookIdForSearch = br.readLine();
+		Book bookForSearch = new Book();
+		int bookid1 = Integer.parseInt(bookIdForSearch);
+		IJdbcDAO jdbcDAO2 = new JdbcDAOImpl();
+		bookForSearch.setBookid(bookid1);
+		Book bookresult = jdbcDAO2.searchBook(bookForSearch);
+		if (bookresult == null) {
+			System.out.println("Requested book is not available....");
+		} else {
+			System.out.println("The Requested Book is : " + bookresult);
+		}
+		return bookresult;
 	}
 
 	private static boolean isStrEmpty(String userInput) {
 		return userInput == null || userInput.length() == 0;
 	}
 
-	private static Subject addBook() {
+	private static Subject addBook(BufferedReader br) {
 
 		Subject subject = new Subject();
 
-		BufferedReader br = new BufferedReader(new InputStreamReader((System.in)));
 		try {
 
+			//Read Subject data from user
 			readSubjectFromUser(subject, br);
 
 			String noOfBooks = br.readLine();
+			while (isStrEmpty(noOfBooks)) {
+				System.out.println("Please enter number of books in integer.....");
+				noOfBooks = br.readLine();
+			}
 			int noOfBooksInt = Integer.parseInt(noOfBooks);
 
+			//Read Books data from user
 			Set<Book> bookList = readBookListFromUser(br, noOfBooksInt);
 
 			subject.setBookList(bookList);
@@ -132,8 +218,8 @@ public class CoreJdbcDemo {
 			System.out.println("The input data from User is : " + subject);
 
 		} catch (IOException e) {
-			System.out.println("Exception while reading a data from input/output system.....");
-		}
+			System.out.println(EXCEPTION_WHILE_READING_A_DATA_FROM_INPUT_OUTPUT_SYSTEM + e.getMessage());
+		} 
 
 		return subject;
 	}
@@ -151,22 +237,25 @@ public class CoreJdbcDemo {
 
 			String bookTitle = br.readLine();
 
-			if (bookTitle == null || bookTitle.trim().length() == 0) {
-				throw new RuntimeException("Title should not be empty/null...");
+			while (isStrEmpty(bookTitle)) {
+				System.out.println("Title should not be empty/null...");
+				bookTitle = br.readLine();
 			}
 			System.out.println("Input a Book price in (double)....");
 
 			String priceInStr = br.readLine();
-			if (priceInStr == null || priceInStr.trim().length() == 0) {
-				throw new RuntimeException("Price should not be empty/null.. It should be double number...");
+			while (isStrEmpty(priceInStr)) {
+				System.out.println("Price should not be empty/null.. It should be double number...");
+				priceInStr = br.readLine();
 			}
 			double price = Double.parseDouble(priceInStr);
 
 			System.out.println("Input a Book volume in integer....");
 
 			String volumeStr = br.readLine();
-			if (volumeStr == null || volumeStr.trim().length() == 0) {
-				throw new RuntimeException("Volume should not be empty/null.. It should be integer number...");
+			while (isStrEmpty(volumeStr)) {
+				System.out.println("Volume should not be empty/null.. It should be integer number...");
+				volumeStr = br.readLine();
 			}
 			int volume = Integer.parseInt(volumeStr);
 
@@ -210,8 +299,15 @@ public class CoreJdbcDemo {
 
 		System.out.println("Input a durationInHours in number....");
 
+		int durationInHours = 0;
 		String durationInHoursStr = br.readLine();
-		int durationInHours = Integer.parseInt(durationInHoursStr);
+		while (isStrEmpty(durationInHoursStr)) {
+
+			System.out.println("Please input a durationInHours in number....");
+
+			durationInHoursStr = br.readLine();
+		}
+		durationInHours = Integer.parseInt(durationInHoursStr);
 
 		subject.setDurationInHours(durationInHours);
 		subject.setTitle(subjectTile);

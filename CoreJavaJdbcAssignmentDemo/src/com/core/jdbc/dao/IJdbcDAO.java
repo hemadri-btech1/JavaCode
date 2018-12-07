@@ -14,6 +14,6 @@ public interface IJdbcDAO {
 
 	public Book searchBook(Book book);
 
-	public Subject searchSubject();
+	public Subject searchSubject(Subject subjectForSearch);
 
 }
