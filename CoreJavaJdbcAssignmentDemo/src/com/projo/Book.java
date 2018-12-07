@@ -8,6 +8,15 @@ public class Book {
 	private double price;
 	private int volume;
 	private LocalDate publishDate;
+	private int bookid;
+
+	public int getBookid() {
+		return bookid;
+	}
+
+	public void setBookid(int bookid) {
+		this.bookid = bookid;
+	}
 
 	public String getTitle() {
 		return title;

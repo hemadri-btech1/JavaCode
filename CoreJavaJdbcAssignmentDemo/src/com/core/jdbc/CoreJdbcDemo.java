@@ -24,6 +24,9 @@ public class CoreJdbcDemo {
 		readInputFromUser();
 	}
 
+	/**
+	 * Menu option to read a input from USER.....
+	 */
 	private static void readInputFromUser() {
 
 		System.out.println("-----Select any option in the below list------");
@@ -67,9 +70,24 @@ public class CoreJdbcDemo {
 				break;
 			case "c":
 				System.out.println("Userinput - Delete a book ");
+				System.out.println("Input a bookid to be deleted......\n");
+				String bookIdStr = br.readLine();
+				Book book = new Book();
+				int bookid = Integer.parseInt(bookIdStr);
+				IJdbcDAO jdbcDAO1 = new JdbcDAOImpl();
+				book.setBookid(bookid);
+				jdbcDAO1.deleteBook(book);
 				break;
 			case "d":
 				System.out.println("Userinput - Search for a book ");
+				System.out.println("Input a bookid to be searched......\n");
+				String bookIdForSearch = br.readLine();
+				Book bookForSearch = new Book();
+				int bookid1 = Integer.parseInt(bookIdForSearch);
+				IJdbcDAO jdbcDAO2= new JdbcDAOImpl();
+				bookForSearch.setBookid(bookid1);
+				Book bookresult = jdbcDAO2.searchBook(bookForSearch);
+				System.out.println("Result Book is : " + bookresult);
 				break;
 			case "e":
 				System.out.println("Userinput - Search for a subject ");

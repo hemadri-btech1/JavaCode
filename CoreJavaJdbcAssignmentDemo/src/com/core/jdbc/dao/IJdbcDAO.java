@@ -12,7 +12,7 @@ public interface IJdbcDAO {
 
 	public String deleteBook(Book book);
 
-	public Book searchBook();
+	public Book searchBook(Book book);
 
 	public Subject searchSubject();
 

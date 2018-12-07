@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.core.jdbc.JdbcConnectionFactory;
 import com.projo.Book;
@@ -26,7 +28,7 @@ public class JdbcDAOImpl implements IJdbcDAO {
 
 			// If Subject is non zero - the Subject is saved successfully
 			if (subjectId > 0) {
-				for(Book book : subject.getBookList()) {
+				for (Book book : subject.getBookList()) {
 					insertBook(book, connection, subjectId);
 				}
 			}
@@ -114,28 +116,130 @@ public class JdbcDAOImpl implements IJdbcDAO {
 
 	@Override
 	public String deleteSubject(Subject subject) {
-		
+
 		Connection connection = JdbcConnectionFactory.getConnection();
 
-		//To Delete a subject - we should first delete child component BOOK
-		//Retrieve BOOK ID for the given title
-		
-		
-		
-		
+		// To Delete a subject - we should first delete child component BOOK
+		// Retrieve BOOK ID for the given title
+		List<Integer> subjectIDList = retrieveSubjectIdByTitle(connection, subject.getTitle());
+
+		// Delete based on the subjectID list
+		for (Integer subjectId : subjectIDList) {
+			deleteBook(connection, subjectId);
+		}
+
 		return null;
+	}
+
+	private void deleteBook(Connection connection, Integer subjectId) {
+
+		try {
+			PreparedStatement pstmt = connection.prepareStatement(" DELETE FROM BOOK where Fk_Subject_Id = ? ");
+			int deleteCount = pstmt.executeUpdate();
+		} catch (Exception ex) {
+
+		}
+
+	}
+
+	private List<Integer> retrieveSubjectIdByTitle(Connection connection, String title) {
+
+		List<Integer> subjectIdList = new ArrayList<>();
+		try {
+			PreparedStatement pstmt = connection.prepareStatement("SELECT subjectid from Subject where title = ? ");
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				subjectIdList.add(rs.getInt("subjectid"));
+			}
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		return subjectIdList;
+
 	}
 
 	@Override
 	public String deleteBook(Book book) {
-		// TODO Auto-generated method stub
+		Connection connection = JdbcConnectionFactory.getConnection();
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		int noOfRows = 0;
+
+		try {
+			pstmt = connection.prepareStatement("DELETE FROM Book where bookid = ?");
+			pstmt.setInt(1, book.getBookid());
+			noOfRows = pstmt.executeUpdate();
+			if (noOfRows > 0) {
+				System.out.println("Successfully deleted book for the id : " + book.getBookid() + " -> " + noOfRows);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			closeAllResources(connection, pstmt, rs);
+		}
+
 		return null;
 	}
 
+	/**
+	 * This is o make-sure that all the JDBC resources are closed.
+	 * 
+	 * @param connection
+	 * @param pstmt
+	 * @param rs
+	 */
+	private void closeAllResources(Connection connection, PreparedStatement pstmt, ResultSet rs) {
+
+		if (connection != null) {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		if (pstmt != null) {
+			try {
+				pstmt.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		if (rs != null) {
+			try {
+				rs.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	@Override
-	public Book searchBook() {
-		// TODO Auto-generated method stub
-		return null;
+	public Book searchBook(Book inputBook) {
+		Connection connection = JdbcConnectionFactory.getConnection();
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		Book bookResult = null;
+		try {
+			pstmt = connection.prepareStatement("SELECT * FROM BOOK WHERE BOOKID = ? ");
+			pstmt.setInt(1, inputBook.getBookid());
+
+			rs = pstmt.executeQuery();
+			while (rs.next()) {
+				bookResult = new Book();
+				bookResult.setPrice(rs.getDouble("price"));
+				bookResult.setPublishDate(rs.getDate("publishDate").toLocalDate());
+				bookResult.setTitle(rs.getString("title"));
+				bookResult.setVolume(rs.getInt("volume"));
+				bookResult.setBookid(rs.getInt("bookid"));
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return bookResult;
 	}
 
 	@Override
