@@ -13,8 +13,9 @@ import com.utils.Utils;
 public class JdbcDAOImpl implements IJdbcDAO {
 
 
+	private static final String BOOK_DETAILS_ARE_SAVED_SUCCESSFULLY_WITH_BOOK_ID = "Book details are saved successfully with Book-ID : ";
 	private static final String INSERT_INTO_BOOK_TITLE_PRICE_VOLUME_PUBLISH_DATE_FK_SUBJECT_ID_VALUES = "INSERT INTO Book (title, price,volume,publishDate,Fk_Subject_Id) values (?, ?, ?, ?, ?)";
-	private static final String SUBJECT_DETAILS_ARE_SAVED_SUCCESSFULLY_WITH_ID = "Subject details are saved successfully With ID : ";
+	private static final String SUBJECT_DETAILS_ARE_SAVED_SUCCESSFULLY_WITH_ID = "Subject details are saved successfully With Subject-ID : ";
 	private static final String INSERT_INTO_SUBJECT_TITLE_DURATION_IN_HOURS_VALUES = " INSERT INTO Subject (title, durationInHours) values (?,?) ";
 
 	@Override
@@ -39,7 +40,7 @@ public class JdbcDAOImpl implements IJdbcDAO {
 				try {
 					connection.close();
 				} catch (SQLException e) {
-					System.out.println("Exception while closing the connection.....");
+					System.out.println("Exception while closing the connection....."+e.getMessage());
 				}
 			}
 		}
@@ -57,13 +58,11 @@ public class JdbcDAOImpl implements IJdbcDAO {
 		java.sql.Date sqlDate = java.sql.Date.valueOf(book.getPublishDate());
 		pstmt.setDate(4, sqlDate);
 		pstmt.setInt(5, subjectId);
-		int noOfBooks = pstmt.executeUpdate();
-		System.out.println("noOfBooks : " + noOfBooks);
+		
+		pstmt.executeUpdate();
 		rs = pstmt.getGeneratedKeys();
 		while (rs.next()) {
-			if (noOfBooks > 0) {
-				System.out.println("Book details are saved successfully with ID : " + rs.getInt(1));
-			}
+				System.out.println(BOOK_DETAILS_ARE_SAVED_SUCCESSFULLY_WITH_BOOK_ID + rs.getInt(1));
 		}
 	}
 
@@ -84,8 +83,7 @@ public class JdbcDAOImpl implements IJdbcDAO {
 			pstmt.setString(1, subject.getTitle());
 			pstmt.setInt(2, subject.getDurationInHours());
 
-			int numRowsAffected = pstmt.executeUpdate();
-			System.out.println("Number of rows affected..." + numRowsAffected);
+			pstmt.executeUpdate();
 			rs = pstmt.getGeneratedKeys();
 
 			while (rs.next()) {
@@ -126,7 +124,7 @@ public class JdbcDAOImpl implements IJdbcDAO {
 				closeAllResources(connection, pstmt, null);
 			}
 			
-			getOperationStatus(subDeleteCount, operationStatus);
+			operationStatus = getOperationStatus(subDeleteCount, operationStatus);
 
 		}
 
@@ -184,15 +182,16 @@ public class JdbcDAOImpl implements IJdbcDAO {
 		return null;
 	}
 
-	private void getOperationStatus(int noOfRows, String operationStatus) {
-		if (operationStatus != null && operationStatus.isEmpty()) {
+	private String getOperationStatus(int noOfRows, String operationStatus) {
+//		if (operationStatus != null && operationStatus.isEmpty()) {
 			if (noOfRows > 0) {
 				operationStatus = Utils.SUCCESS;
 			} else {
 				operationStatus = Utils.NOT_FOUND;
 			}
 
-		}
+//		}
+		return operationStatus;
 	}
 
 	/**

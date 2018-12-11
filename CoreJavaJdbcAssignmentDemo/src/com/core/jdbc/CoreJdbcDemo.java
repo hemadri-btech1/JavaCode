@@ -21,20 +21,19 @@ import com.utils.Utils;
 public class CoreJdbcDemo {
 
 	private static final String EXCEPTION_WHILE_READING_A_DATA_FROM_INPUT_OUTPUT_SYSTEM = "Exception while reading a data from input/output system.....";
-	private static final String EXCEPTION_WHILE_CLOSING_BUFFERED_READER = "Exception while closing BufferedReader..";
 	private static final String FAILED_TO_DELETE_BOTH_SUBJECT_AND_ASSOCIATED_BOOKS_FOR_THE_SUBJECT_ID = "Failed to delete both Subject and associated Books for the Subject ID.....";
 	private static final String THE_PROVIDED_SUBJECT_ID_IS_NOT_AVAILABLE_IN_DATABASE = "The provided Subject ID is not available in database.....";
 	private static final String SUCCESSFULLY_DELETED_BOTH_SUBJECT_AND_ASSOCIATED_BOOKS_FOR_THE_SUBJECT_ID = "Successfully deleted both Subject and associated Books for the Subject ID.....";
 
 	public static void main(String[] args) throws ClassNotFoundException, SQLException {
 
-		processMenuDrivenOperation();
+		new CoreJdbcDemo().processMenuDrivenOperation();
 	}
 
 	/**
 	 * Menu option to read a input from USER.....
 	 */
-	private static void processMenuDrivenOperation() {
+	private void processMenuDrivenOperation() {
 
 		BufferedReader br = new BufferedReader(new InputStreamReader((System.in)));
 
@@ -60,26 +59,32 @@ public class CoreJdbcDemo {
 				switch (userInput.toLowerCase()) {
 
 				case "a":
+					// Add a new Book
 					Subject subject = addBook(br);
 					IJdbcDAO jdbcDAO = new JdbcDAOImpl();
 					jdbcDAO.addBook(subject);
 
 					break;
 				case "b":
+					// Delete Subject
 					deleteSubject(br);
 
 					break;
 				case "c":
+					// Delete Book
 					deleteBook(br);
 					break;
 				case "d":
+					// Search a Book
 					searchBook(br);
 
 					break;
 				case "e":
+					// Search Subject
 					searchSubject(br);
 					break;
 				case "f":
+					// Exit
 					System.out.println("As per userinput - Exiting......... ");
 					stopExecutionInd = false;
 					break;
@@ -106,7 +111,6 @@ public class CoreJdbcDemo {
 				System.out.println("Exception while reading an input from user..." + e.getMessage());
 			}
 		}
-		
 
 	}
 
@@ -115,14 +119,19 @@ public class CoreJdbcDemo {
 		String subjectIdForSearch = br.readLine();
 		Subject subjectForSearch = new Subject();
 		int subjectId = Integer.parseInt(subjectIdForSearch);
-		IJdbcDAO jdbcDAO2 = new JdbcDAOImpl();
+		IJdbcDAO jdbcDAO = getJdbcDAO();
 		subjectForSearch.setSubjectId(subjectId);
-		Subject subjectResult = jdbcDAO2.searchSubject(subjectForSearch);
+		Subject subjectResult = jdbcDAO.searchSubject(subjectForSearch);
 		if (subjectResult == null) {
 			System.out.println("Requested book is not available....");
 		} else {
 			System.out.println("The Requested Book is : " + subjectResult);
 		}
+	}
+
+	private static IJdbcDAO getJdbcDAO() {
+		IJdbcDAO jdbcDAO = new JdbcDAOImpl();
+		return jdbcDAO;
 	}
 
 	private static void deleteBook(BufferedReader br) throws IOException {
@@ -152,7 +161,7 @@ public class CoreJdbcDemo {
 			System.out.println("Input a subjectId to be deleted......\n");
 			String subjectIdForSearch = br.readLine();
 			Subject subjectForSearch = new Subject();
-			while(isStrEmpty(subjectIdForSearch)) {
+			while (isStrEmpty(subjectIdForSearch)) {
 				System.out.println("Please enter valid bookid in number/integer...");
 				subjectIdForSearch = br.readLine();
 			}
@@ -179,7 +188,7 @@ public class CoreJdbcDemo {
 		String bookIdForSearch = br.readLine();
 		Book bookForSearch = new Book();
 		int bookid1 = Integer.parseInt(bookIdForSearch);
-		IJdbcDAO jdbcDAO2 = new JdbcDAOImpl();
+		IJdbcDAO jdbcDAO2 = getJdbcDAO();
 		bookForSearch.setBookid(bookid1);
 		Book bookresult = jdbcDAO2.searchBook(bookForSearch);
 		if (bookresult == null) {
@@ -194,13 +203,13 @@ public class CoreJdbcDemo {
 		return userInput == null || userInput.length() == 0;
 	}
 
-	private static Subject addBook(BufferedReader br) {
+	private Subject addBook(BufferedReader br) {
 
 		Subject subject = new Subject();
 
 		try {
 
-			//Read Subject data from user
+			// Read Subject data from user
 			readSubjectFromUser(subject, br);
 
 			String noOfBooks = br.readLine();
@@ -210,7 +219,7 @@ public class CoreJdbcDemo {
 			}
 			int noOfBooksInt = Integer.parseInt(noOfBooks);
 
-			//Read Books data from user
+			// Read Books data from user
 			Set<Book> bookList = readBookListFromUser(br, noOfBooksInt);
 
 			subject.setBookList(bookList);
@@ -219,12 +228,12 @@ public class CoreJdbcDemo {
 
 		} catch (IOException e) {
 			System.out.println(EXCEPTION_WHILE_READING_A_DATA_FROM_INPUT_OUTPUT_SYSTEM + e.getMessage());
-		} 
+		}
 
 		return subject;
 	}
 
-	private static Set<Book> readBookListFromUser(BufferedReader br, int noOfBooksInt) throws IOException {
+	private Set<Book> readBookListFromUser(BufferedReader br, int noOfBooksInt) throws IOException {
 		int i = 1;
 
 		Set<Book> bookList = new HashSet<>();
@@ -276,7 +285,7 @@ public class CoreJdbcDemo {
 		return bookList;
 	}
 
-	private static Date readAndParseDate(BufferedReader br) throws IOException {
+	private Date readAndParseDate(BufferedReader br) throws IOException {
 		System.out.println("Input a Book published date in the format dd/mm/yyyy....");
 		String publishedDateStr = br.readLine();
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
@@ -292,7 +301,7 @@ public class CoreJdbcDemo {
 		return date;
 	}
 
-	private static void readSubjectFromUser(Subject subject, BufferedReader br) throws IOException {
+	private void readSubjectFromUser(Subject subject, BufferedReader br) throws IOException {
 		System.out.println("Input a Subject Title....");
 
 		String subjectTile = br.readLine();
