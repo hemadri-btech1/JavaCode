@@ -123,9 +123,9 @@ public class CoreJdbcDemo {
 		subjectForSearch.setSubjectId(subjectId);
 		Subject subjectResult = jdbcDAO.searchSubject(subjectForSearch);
 		if (subjectResult == null) {
-			System.out.println("Requested book is not available....");
+			System.out.println("Requested Subject is not available....");
 		} else {
-			System.out.println("The Requested Book is : " + subjectResult);
+			System.out.println("The Requested Subject is : " + subjectResult);
 		}
 	}
 
@@ -215,7 +215,12 @@ public class CoreJdbcDemo {
 			String noOfBooks = br.readLine();
 			while (isStrEmpty(noOfBooks)) {
 				System.out.println("Please enter number of books in integer.....");
+				try {
 				noOfBooks = br.readLine();
+				} catch(Exception ex) {
+					noOfBooks = null;
+					System.out.println("Number of Books should be integer.....");
+				}
 			}
 			int noOfBooksInt = Integer.parseInt(noOfBooks);
 
@@ -321,7 +326,9 @@ public class CoreJdbcDemo {
 		subject.setDurationInHours(durationInHours);
 		subject.setTitle(subjectTile);
 
-		System.out.println("How many books you wanted to add for the Subject...." + subjectTile);
+		System.out.println("As Subject and Book have foriegn key relationship - Kindly provide below details...");
+		System.out.println("");
+		System.out.println("How many books you wanted to add for this Subject...." + subjectTile);
 	}
 
 	public static LocalDate convertToLocalDateViaInstant(Date dateToConvert) {

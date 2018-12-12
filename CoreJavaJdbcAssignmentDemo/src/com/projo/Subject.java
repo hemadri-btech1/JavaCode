@@ -49,8 +49,8 @@ public class Subject {
 	@Override
 	public String toString() {
 		StringBuilder suBuilder = new StringBuilder();
-		suBuilder.append("Subject Title = ").append(title).append(", durationInHours = ").append(durationInHours)
-		.append(", bookList = ").append(getBookList().toString());
+		suBuilder.append("Subject Title = ").append(title).append(", durationInHours = ").append(durationInHours);
+		//.append(", bookList = ").append(getBookList().toString());
 		return suBuilder.toString();
 	}
 

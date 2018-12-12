@@ -15,9 +15,9 @@ public class JdbcConnectionFactory {
 	private static final String CLASS_NOT_FOUND_EXCEPTION_WHILE_CONNECTING_TO_THE_DATABASE = "ClassNotFoundException while connecting to the database";
 	private static final String SQL_EXCEPTION_WHILE_CONNECTING_TO_THE_DATABASE = "SQLException while connecting to the database";
 	private static final String COM_MYSQL_JDBC_DRIVER = "com.mysql.jdbc.Driver";
-	private static final String MYSQL_URL = "jdbc:mysql://localhost:3306/mysql_new";
+	private static final String MYSQL_URL = "jdbc:mysql://localhost:3306/mysql_java?autoReconnect=true&useSSL=false";
 	private static final String USERNAME = "root";
-	private static final String PASSWORD = "hemadri";
+	private static final String PASSWORD = "pass@word1";
 
 	/**
 	 * GET a connection to database

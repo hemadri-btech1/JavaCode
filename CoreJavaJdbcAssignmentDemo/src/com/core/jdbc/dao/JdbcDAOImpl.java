@@ -6,15 +6,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import com.core.jdbc.JdbcConnectionFactory;
+import com.mysql.jdbc.Statement;
 import com.projo.Book;
 import com.projo.Subject;
 import com.utils.Utils;
 
 public class JdbcDAOImpl implements IJdbcDAO {
 
-
 	private static final String BOOK_DETAILS_ARE_SAVED_SUCCESSFULLY_WITH_BOOK_ID = "Book details are saved successfully with Book-ID : ";
-	private static final String INSERT_INTO_BOOK_TITLE_PRICE_VOLUME_PUBLISH_DATE_FK_SUBJECT_ID_VALUES = "INSERT INTO Book (title, price,volume,publishDate,Fk_Subject_Id) values (?, ?, ?, ?, ?)";
+	private static final String INSERT_INTO_BOOK_TITLE_PRICE_VOLUME_PUBLISH_DATE_FK_SUBJECT_ID_VALUES = "INSERT INTO Book (title, price,volume,publishDate,fk_subjectid) values (?, ?, ?, ?, ?)";
 	private static final String SUBJECT_DETAILS_ARE_SAVED_SUCCESSFULLY_WITH_ID = "Subject details are saved successfully With Subject-ID : ";
 	private static final String INSERT_INTO_SUBJECT_TITLE_DURATION_IN_HOURS_VALUES = " INSERT INTO Subject (title, durationInHours) values (?,?) ";
 
@@ -34,13 +34,14 @@ public class JdbcDAOImpl implements IJdbcDAO {
 				}
 			}
 		} catch (SQLException e) {
+			System.out.println("SQLException while adding a book : " + e.getMessage());
 			e.printStackTrace();
 		} finally {
 			if (connection != null) {
 				try {
 					connection.close();
 				} catch (SQLException e) {
-					System.out.println("Exception while closing the connection....."+e.getMessage());
+					System.out.println("Exception while closing the connection....." + e.getMessage());
 				}
 			}
 		}
@@ -51,18 +52,18 @@ public class JdbcDAOImpl implements IJdbcDAO {
 	private void insertBook(Book book, Connection connection, int subjectId) throws SQLException {
 		PreparedStatement pstmt;
 		ResultSet rs;
-		pstmt = connection.prepareStatement(INSERT_INTO_BOOK_TITLE_PRICE_VOLUME_PUBLISH_DATE_FK_SUBJECT_ID_VALUES);
+		pstmt = connection.prepareStatement(INSERT_INTO_BOOK_TITLE_PRICE_VOLUME_PUBLISH_DATE_FK_SUBJECT_ID_VALUES, Statement.RETURN_GENERATED_KEYS);
 		pstmt.setString(1, book.getTitle());
 		pstmt.setDouble(2, book.getPrice());
 		pstmt.setInt(3, book.getVolume());
 		java.sql.Date sqlDate = java.sql.Date.valueOf(book.getPublishDate());
 		pstmt.setDate(4, sqlDate);
 		pstmt.setInt(5, subjectId);
-		
+
 		pstmt.executeUpdate();
 		rs = pstmt.getGeneratedKeys();
 		while (rs.next()) {
-				System.out.println(BOOK_DETAILS_ARE_SAVED_SUCCESSFULLY_WITH_BOOK_ID + rs.getInt(1));
+			System.out.println(BOOK_DETAILS_ARE_SAVED_SUCCESSFULLY_WITH_BOOK_ID + rs.getInt(1));
 		}
 	}
 
@@ -78,7 +79,8 @@ public class JdbcDAOImpl implements IJdbcDAO {
 		ResultSet rs = null;
 		int subjectId = 0;
 		try {
-			pstmt = connection.prepareStatement(INSERT_INTO_SUBJECT_TITLE_DURATION_IN_HOURS_VALUES);
+			pstmt = connection.prepareStatement(INSERT_INTO_SUBJECT_TITLE_DURATION_IN_HOURS_VALUES,
+					Statement.RETURN_GENERATED_KEYS);
 
 			pstmt.setString(1, subject.getTitle());
 			pstmt.setInt(2, subject.getDurationInHours());
@@ -93,6 +95,7 @@ public class JdbcDAOImpl implements IJdbcDAO {
 			}
 		} catch (SQLException e) {
 			System.out.println("SQLException while inserting Subject details....." + e.getMessage());
+			e.printStackTrace();
 		} finally {
 			closeAllResources(null, pstmt, rs);
 		}
@@ -118,12 +121,13 @@ public class JdbcDAOImpl implements IJdbcDAO {
 
 				subDeleteCount = pstmt.executeUpdate();
 			} catch (SQLException ex) {
-				System.out.println("SQLException while deleting recordd.....");
+				System.out.println("SQLException while deleting recordd....." + ex.getMessage());
+				ex.printStackTrace();
 				operationStatus = Utils.FAIL;
 			} finally {
 				closeAllResources(connection, pstmt, null);
 			}
-			
+
 			operationStatus = getOperationStatus(subDeleteCount, operationStatus);
 
 		}
@@ -142,7 +146,7 @@ public class JdbcDAOImpl implements IJdbcDAO {
 		int bookDeleteCount = 0;
 		PreparedStatement pstmt = null;
 		try {
-			pstmt = connection.prepareStatement(" DELETE FROM BOOK where Fk_Subject_Id = ? ");
+			pstmt = connection.prepareStatement(" DELETE FROM BOOK where fk_subjectid = ? ");
 			pstmt.setInt(1, subjectId);
 
 			bookDeleteCount = pstmt.executeUpdate();
@@ -176,21 +180,21 @@ public class JdbcDAOImpl implements IJdbcDAO {
 		} finally {
 			closeAllResources(connection, pstmt, rs);
 		}
-		
+
 		getOperationStatus(noOfRows, operationStatus);
 
 		return null;
 	}
 
 	private String getOperationStatus(int noOfRows, String operationStatus) {
-//		if (operationStatus != null && operationStatus.isEmpty()) {
-			if (noOfRows > 0) {
-				operationStatus = Utils.SUCCESS;
-			} else {
-				operationStatus = Utils.NOT_FOUND;
-			}
+		// if (operationStatus != null && operationStatus.isEmpty()) {
+		if (noOfRows > 0) {
+			operationStatus = Utils.SUCCESS;
+		} else {
+			operationStatus = Utils.NOT_FOUND;
+		}
 
-//		}
+		// }
 		return operationStatus;
 	}
 
